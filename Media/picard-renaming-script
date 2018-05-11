@@ -12,11 +12,12 @@ $noop(★ - Custom folder for soundtrack/various                               �
 $noop(★ - Alphabetize artist without leading "The"                           ★)
 $noop(★ - Improve tag displaying on some device                              ★)
 $noop(★ - Filtered character for files & folders naming                      ★)
-$noop(★ - Include media type in folder name [when it's not CD]               ★)
+$noop(★ - Include media type in folder name [when its not CD]               ★)
 $noop(★ - Subfolder for multi-disc [setting to disable subfolder]            ★)
 $noop(★ - Custom folder tag for multi-disc CD/Vinyl [CD1/Disc1 by default]   ★)
 $noop(★ - Put multi-CD release in same folder [naming become 101/102/201...] ★)
 $noop(★ - Vinyl can use musicbrainz style for track [A1/A2/B1...]            ★)
+$noop(★   Put incomplete in separate artist/cat root path                    ★)
 $noop(★ - Custom settings                                                    ★)
 $noop(★                                                                      ★)
 $noop(★ Needed :                                                             ★)
@@ -47,8 +48,8 @@ $noop(★ Multi-Disc ★)
 $set(_useSubDiscFolder,1)
 $set(_mergeDiscWhenNotUsingSubfolder,0)
 $set(_showDiscSubtitle,1)
-$set(_nameForTypeCD,CD)
-$set(_nameForTypeVinyl,Disc)
+$set(_nameForTypeCD,Disc)
+$set(_nameForTypeVinyl,Side)
 
 $noop(★ orderTypeForRoot ★)
 $noop(★  1: Category [Last.fm.ng] ★)
@@ -61,19 +62,20 @@ $noop(★  2: First letter of last name ★)
 $set(_orderTypeForArtist,2)
 
 $noop(★ CUSTOM SUBFOLDER BY TYPE ★)
-$set(_albumSubFolder,Albums/)
-$set(_liveSubFolder,Lives/)
-$set(_singlesSubFolder,Singles/)
+$set(_albumSubFolder,Album/)
+$set(_liveSubFolder,Live/)
+$set(_singlesSubFolder,Single/)
 $set(_epSubFolder,EP/)
 $set(_broadcastSubFolder,Broadcast/)
 $set(_otherSubFolder,Others/)
 
 $noop(★ COMPILATION FOLDER [NO VARIOUS] ★)
-$set(_compilationsSubFolder,Compilations/)
+$set(_compilationsSubFolder,Compilation/)
 
 $noop(★ SOUNDTRACK/VARIOUS FOLDER ★)
-$set(_soundTracksFolder,SoundTracks/)
+$set(_soundTracksFolder,Soundtrack/)
 $set(_variousArtistsFolder,Various/)
+$set(_incompleteFolder,Incomplete/)
 
 $noop(####################### END SETTINGS #######################)
 
@@ -158,6 +160,10 @@ $if($in(%releasetype%,live),
 $noop(★ Detect Soundtrack ★)
 $if($in(%releasetype%,soundtrack),
   $set(_isSoundTrack,1)
+)
+$noop(★ Detect Incomplete ★)
+$if($eq($is_complete(),0),
+  $set(_isIncomplete,1)
 )
 
 $noop(★ Detect Various Artist ★)
@@ -296,17 +302,21 @@ $if(%_isSoundTrack%,%_soundTracksFolder%,
       $if2(%_albumartistsortForFilename%,%_artistsortForFilename%)
     )/
 
+    $noop(★ Incomplete in custom directory ★)
+    $if(%_isIncomplete%,%_incompleteFolder%,
+
     $noop(★ Organize by type ★)
     $if($eq(%_separateByTypeInArtistFolder%,1),
       $if($or(%_isArtistCompil%,%_isGlobalCompil%),%_compilationsSubFolder%,
         $if($eq(%_isLive%,1),%_liveSubFolder%,
           $if($eq(%_isAlbum%,1),
             $if($eq(%_separateAlbum%,1),%_albumSubFolder%)
+            )
+            $if($eq(%_isSingle%,1),%_singlesSubFolder%)
+            $if($eq(%_isEP%,1),%_epSubFolder%)
+            $if($eq(%_isBroadcast%,1),%_broadcastSubFolder%)
+            $if($eq(%_isOther%,1),%_otherSubFolder%)
           )
-          $if($eq(%_isSingle%,1),%_singlesSubFolder%)
-          $if($eq(%_isEP%,1),%_epSubFolder%)
-          $if($eq(%_isBroadcast%,1),%_broadcastSubFolder%)
-          $if($eq(%_isOther%,1),%_otherSubFolder%)
         )
       )
     )
@@ -324,7 +334,7 @@ $if($gt(%totaldiscs%,1),$noop(
   )$if($in(%media%,Vinyl),$noop(
     )$set(_nameForDiscFolder,@OSLASH@@OBRACKET@%_nameForTypeVinyl%%_discnumber%@CBRACKET@),$noop(
     )$set(_nameForDiscFolder,@OSLASH@@OBRACKET@%_nameForTypeCD%%_discnumber%@CBRACKET@))$noop(
-    )$if($and(%_discsubtitleForFilename%,$eq(%_showDiscSubtitle%,1)),$set(_nameForDiscFolder,%_nameForDiscFolder%~%_discsubtitleForFilename%))$noop(
+    )$if($and(%_discsubtitleForFilename%,$eq(%_showDiscSubtitle%,1)),$set(_nameForDiscFolder,%_nameForDiscFolder%%_discsubtitleForFilename%))$noop(
     )$if($eq(%_useSubDiscFolder%,1),$noop(
       )$set(_nameForDiscFolder,$replace(%_nameForDiscFolder%,@OSLASH@@OBRACKET@,/))$noop(
       )$set(_nameForDiscFolder,$replace(%_nameForDiscFolder%,@CBRACKET@,)),$noop(
